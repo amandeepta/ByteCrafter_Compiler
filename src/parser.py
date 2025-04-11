@@ -1,9 +1,19 @@
-
+#######################################
+# TOKEN TYPES
+#######################################
+TT_INT      = 'INT'
+TT_FLOAT    = 'FLOAT'
+TT_PLUS     = 'PLUS'
+TT_MINUS    = 'MINUS'
+TT_MUL      = 'MUL'
+TT_DIV      = 'DIV'
+TT_LPAREN   = 'LPAREN'
+TT_RPAREN   = 'RPAREN'
+TT_EOF      = 'EOF'
 
 #######################################
 # NODE CLASSES
 #######################################
-
 class NumberNode:
     def __init__(self, tok):
         self.tok = tok
@@ -29,9 +39,8 @@ class UnaryOpNode:
         return f'({self.op_tok}{self.node})'
 
 #######################################
-# ERROR CLASSES
+# ERROR CLASS
 #######################################
-
 class InvalidSyntaxError(Exception):
     def __init__(self, pos_start, pos_end, message):
         self.pos_start = pos_start
@@ -44,7 +53,6 @@ class InvalidSyntaxError(Exception):
 #######################################
 # PARSE RESULT
 #######################################
-
 class ParseResult:
     def __init__(self):
         self.error = None
@@ -65,14 +73,17 @@ class ParseResult:
         self.error = error
         return self
 
+    def __repr__(self):
+        return f'Error: {self.error}' if self.error else f'Node: {self.node}'
+
 #######################################
 # PARSER
 #######################################
-
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
         self.tok_idx = -1
+        self.current_tok = None
         self.advance()
 
     def advance(self):
@@ -83,12 +94,11 @@ class Parser:
 
     def parse(self):
         res = self.expr()
-        # Ensure we reached end of tokens (or encountered EOF)
-        if not res.error and self.current_tok.type != TT_EOF:
+        if not res.error and self.current_tok and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start if hasattr(self.current_tok, 'pos_start') else None,
-                self.current_tok.pos_end if hasattr(self.current_tok, 'pos_end') else None,
-                "Expected '+', '-', '*' or '/'"
+                getattr(self.current_tok, 'pos_start', None),
+                getattr(self.current_tok, 'pos_end', None),
+                "Expected '+', '-', '*', or '/'"
             ))
         return res
 
@@ -98,21 +108,23 @@ class Parser:
 
         if tok.type in (TT_PLUS, TT_MINUS):
             op_tok = tok
-            res.register(self.advance())
+            self.advance()
             factor = res.register(self.factor())
-            if res.error: return res
+            if res.error:
+                return res
             return res.success(UnaryOpNode(op_tok, factor))
 
         elif tok.type in (TT_INT, TT_FLOAT):
-            res.register(self.advance())
+            self.advance()
             return res.success(NumberNode(tok))
 
         elif tok.type == TT_LPAREN:
-            res.register(self.advance())
+            self.advance()
             expr = res.register(self.expr())
-            if res.error: return res
+            if res.error:
+                return res
             if self.current_tok.type == TT_RPAREN:
-                res.register(self.advance())
+                self.advance()
                 return res.success(expr)
             else:
                 return res.failure(InvalidSyntaxError(
@@ -124,7 +136,7 @@ class Parser:
         return res.failure(InvalidSyntaxError(
             getattr(tok, 'pos_start', None),
             getattr(tok, 'pos_end', None),
-            "Expected int or float"
+            "Expected int, float, '+', '-', or '('"
         ))
 
     def term(self):
@@ -136,13 +148,15 @@ class Parser:
     def bin_op(self, func, ops):
         res = ParseResult()
         left = res.register(func())
-        if res.error: return res
+        if res.error:
+            return res
 
-        while self.current_tok.type in ops:
+        while self.current_tok is not None and self.current_tok.type in ops:
             op_tok = self.current_tok
-            res.register(self.advance())
+            self.advance()
             right = res.register(func())
-            if res.error: return res
+            if res.error:
+                return res
             left = BinOpNode(left, op_tok, right)
 
         return res.success(left)

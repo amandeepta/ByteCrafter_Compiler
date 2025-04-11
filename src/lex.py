@@ -9,7 +9,7 @@ TT_MUL = 'MUL'
 TT_DIV = 'DIV'
 TT_LPAREN = 'LPAREN'
 TT_RPAREN = 'RPAREN'
-
+TT_EOF = 'EOF'
 # Error class
 class Error:
     def __init__(self, name, message, line, column):
@@ -74,7 +74,7 @@ class Lexer:
             else:
                 err = Error("IllegalCharacter", f"'{self.current}' is not valid", self.line, self.col)
                 return [], err
-        tokens.append(Token(TT_EOF, pos_start=self.pos))
+        tokens.append(Token(TT_EOF))
         return tokens, None
 
     def make_number(self):
