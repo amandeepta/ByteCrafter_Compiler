@@ -1,6 +1,8 @@
 from src.lex import run
 from src.parser import Parser
 
+from src.interpreter import Interpreter
+
 text = "2+3 * (30+4)"
 tokens, error = run(text)
 
@@ -11,3 +13,6 @@ else:
     parser = Parser(tokens)
     ast = parser.parse()
     print(ast)
+    interpreter = Interpreter()
+    result = interpreter.visit(ast.node)
+    print(result)
