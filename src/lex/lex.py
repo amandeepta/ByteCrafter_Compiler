@@ -79,7 +79,7 @@ class Lexer:
                 tokens.append(token)
 
             else:
-                err = Error("IllegalCharacter", f"'{self.current}' is not valid", self.pos.line, self.pos.col)
+                err = Error("IllegalCharacter", f"'{self.current}' is not valid", self.pos.ln, self.pos.col)
                 return [], err
 
         tokens.append(Token(TT_EOF))
@@ -111,7 +111,7 @@ class Lexer:
         id_str = ""
         pos_start = self.pos.copy()
 
-        while self.current is not None and self.current in LETTERS_DIGITS + '-':
+        while self.current is not None and self.current in LETTERS_DIGITS + '_':
             id_str += self.current
             self.next()
         
