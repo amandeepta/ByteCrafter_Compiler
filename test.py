@@ -2,7 +2,7 @@ from src.lex.lex import run
 from src.Parser.parser import Parser
 from src.Interpreter.interpreter import Interpreter
 
-text = "var a = 2+3 * (30+4)"
+text = "var a =2+3"
 tokens, error = run(text)
 
 if error:

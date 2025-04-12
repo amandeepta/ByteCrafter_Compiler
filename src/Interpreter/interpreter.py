@@ -80,6 +80,16 @@ class Interpreter:
     def visit_NumberNode(self, node):
         print("Found the NumberNode")
         return RTResult().success(Number(node.tok.value).set_pos(node.pos_start, node.pos_end))
+    
+    def visit_VarAssignNode(self, node):
+        print("Found the VarAssignNode")
+        res = RTResult()
+        value = res.register(self.visit(node.value_node))
+        if res.error: return res
+        var_name = node.var_name_tok.value
+        # Assuming we have a context to store variables
+        # context.set(var_name, value)
+        return res.success(value.set_pos(node.pos_start, node.pos_end))
 
     def visit_BinOpNode(self, node):
         print("Found the BinOpNode")
