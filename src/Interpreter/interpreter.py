@@ -6,9 +6,7 @@ from src.Utils.error import *
 # Number Class
 
 #######################################
-'''
- bhai is number class ko bhi utils m shift krna??
-'''
+
 class Number:
     def __init__(self, value):
         self.value = value
@@ -44,9 +42,7 @@ class Number:
 #######################################
 # RTResult Class
 #######################################
-'''
-aur yeh bhi???
-'''
+
 class RTResult:
     def __init__(self):
         self.value = None
@@ -70,6 +66,9 @@ class RTResult:
 #######################################
 class Interpreter:
     def visit(self, node):
+        res = RTResult()
+        if node is None :
+            return res.failure(RTError(None, None, 'Tried to interpret a None node — possibly a parser error.'))
         method_name = f'visit_{type(node).__name__}'
         method = getattr(self, method_name, self.no_visit_method)
         return method(node)
@@ -83,7 +82,7 @@ class Interpreter:
     
     def visit_VarAssignNode(self, node):
         print("Found the VarAssignNode")
-        res = RTResult()
+        res = RTResult()    
         value = res.register(self.visit(node.value_node))
         if res.error: return res
         var_name = node.var_name_tok.value
