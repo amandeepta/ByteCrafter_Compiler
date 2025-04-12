@@ -1,15 +1,5 @@
-#######################################
-# TOKEN TYPES
-#######################################
-TT_INT      = 'INT'
-TT_FLOAT    = 'FLOAT'
-TT_PLUS     = 'PLUS'
-TT_MINUS    = 'MINUS'
-TT_MUL      = 'MUL'
-TT_DIV      = 'DIV'
-TT_LPAREN   = 'LPAREN'
-TT_RPAREN   = 'RPAREN'
-TT_EOF      = 'EOF'
+from .tokens import *
+from .errors import *
 
 #######################################
 # NODE CLASSES
@@ -17,6 +7,8 @@ TT_EOF      = 'EOF'
 class NumberNode:
     def __init__(self, tok):
         self.tok = tok
+        self.pos_start = self.tok.pos_start
+        self.pos_end = self.tok.pos_end
 
     def __repr__(self):
         return f'{self.tok}'
@@ -26,6 +18,9 @@ class BinOpNode:
         self.left_node = left_node
         self.op_tok = op_tok
         self.right_node = right_node
+
+        self.pos_start = self.left_node.pos_start
+        self.pos_end = self.right_node.pos_end
 
     def __repr__(self):
         return f'({self.left_node} {self.op_tok} {self.right_node})'
@@ -37,18 +32,20 @@ class UnaryOpNode:
 
     def __repr__(self):
         return f'({self.op_tok}{self.node})'
+    
+class VarAssignNode:
+    def __init__(self, var_name_tok, value_node):
+        self.var_name_tok = var_name_tok
+        self.value_node = value_node
+        self.pos_start = self.var_name_tok.pos_start
+        self.pos_end = self.value_node.pos_end
 
-#######################################
-# ERROR CLASS
-#######################################
-class InvalidSyntaxError(Exception):
-    def __init__(self, pos_start, pos_end, message):
-        self.pos_start = pos_start
-        self.pos_end = pos_end
-        self.message = message
+class VarAccessNode:
+    def __init__(self, var_name_tok):
+        self.var_name_tok = var_name_tok
+        self.pos_start = self.var_name_tok.pos_start
+        self.pos_end = self.var_name_tok.pos_end
 
-    def __str__(self):
-        return f"Invalid Syntax Error: {self.message}"
 
 #######################################
 # PARSE RESULT
@@ -117,6 +114,10 @@ class Parser:
         elif tok.type in (TT_INT, TT_FLOAT):
             self.advance()
             return res.success(NumberNode(tok))
+        
+        elif tok.type == TT_IDENTIFIER:
+            self.advance()
+            return res.success(VarAccessNode(tok))
 
         elif tok.type == TT_LPAREN:
             self.advance()
@@ -143,6 +144,34 @@ class Parser:
         return self.bin_op(self.factor, (TT_MUL, TT_DIV))
 
     def expr(self):
+        res = ParseResult()
+
+        if self.current_tok.matches(TT_KEYWORD, 'VAR'):
+            self.advance()
+
+            if self.current_tok.type != TT_IDENTIFIER:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start,
+                    self.current_tok.pos_end,
+                    "Expected identifier"
+                ))
+            
+            var_name = self.current_tok
+            self.advance()
+
+            if self.current_tok.type != TT_EQ:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start,
+                    self.current_tok.pos_end,
+                    "Expected '='"
+                ))
+
+            self.advance()
+            expr = res.register(self.expr())
+            if res.error: return res
+            return res.success(VarAssignNode(var_name, expr))
+                        
+
         return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
 
     def bin_op(self, func, ops):

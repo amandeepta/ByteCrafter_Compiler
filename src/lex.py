@@ -1,53 +1,28 @@
+from .tokens import *
+from .errors import Error
+
+import string
+
+
 DIGITS = '0123456789'
-
-# Token types
-TT_INT = 'INT'
-TT_FLOAT = 'FLOAT'
-TT_PLUS = 'PLUS'
-TT_MINUS = 'MINUS'
-TT_MUL = 'MUL'
-TT_DIV = 'DIV'
-TT_LPAREN = 'LPAREN'
-TT_RPAREN = 'RPAREN'
-TT_EOF = 'EOF'
-# Error class
-class Error:
-    def __init__(self, name, message, line, column):
-        self.name = name
-        self.message = message
-        self.line = line
-        self.column = column
-
-    def __str__(self):
-        return f"{self.name}: {self.message} at line {self.line + 1}, column {self.column + 1}"
-
-# Token class
-class Token:
-    def __init__(self, type_, value=None):
-        self.type = type_
-        self.value = value
-
-    def __repr__(self):
-        return f"{self.type}:{self.value}" if self.value is not None else self.type
+LETTERS = string.ascii_letters  #for strict ascii controls
+LETTERS_DIGITS = LETTERS + DIGITS
 
 # Lexer class
 class Lexer:
     def __init__(self, text):
         self.text = text
-        self.index = -1
+        self.index = Position(-1, 0, 1)
         self.current = None
         self.line = 0
         self.col = -1
         self.next()
 
     def next(self):
-        self.index += 1
-        if self.index < len(self.text):
-            self.current = self.text[self.index]
-            self.col += 1
-            if self.current == '\n':
-                self.line += 1
-                self.col = -1
+        self.index.advance(self.current)
+
+        if self.index.idx < len(self.text):
+            self.current = self.text[self.index.idx]
         else:
             self.current = None
 
@@ -55,27 +30,66 @@ class Lexer:
         tokens = []
 
         while self.current is not None:
+            # skip blank spaces
             if self.current in ' \t':
                 self.next()
+
+            # numeric values
             elif self.current in DIGITS:
                 tokens.append(self.make_number())
+
+            # identifier/keywords
+            elif self.current in LETTERS:
+                tokens.append(self.make_identifiers())
+
+            # binary operators
             elif self.current == '+':
-                tokens.append(Token(TT_PLUS)); self.next()
+                tokens.append(self.make_simple_token(TT_PLUS))
             elif self.current == '-':
-                tokens.append(Token(TT_MINUS)); self.next()
+                tokens.append(self.make_simple_token(TT_MINUS))
             elif self.current == '*':
-                tokens.append(Token(TT_MUL)); self.next()
+                tokens.append(self.make_simple_token(TT_MUL))
             elif self.current == '/':
-                tokens.append(Token(TT_DIV)); self.next()
+                tokens.append(self.make_simple_token(TT_DIV))
+
+            # parenthesis
             elif self.current == '(':
-                tokens.append(Token(TT_LPAREN)); self.next()
+                tokens.append(self.make_simple_token(TT_LPAREN))
             elif self.current == ')':
-                tokens.append(Token(TT_RPAREN)); self.next()
+                tokens.append(self.make_simple_token(TT_RPAREN))
+
+            # equality
+            elif self.current == '=':
+                token, error = self.make_equals(TT_EQ)
+                if error: return [], error
+                tokens.append(token)
+
+            elif self.current == '!':
+                token, error = self.make_not_equals()
+                if error: return [], error
+                tokens.append(token)
+
+            elif self.current == '<':
+                token, error = self.make_less_than()
+                if error: return [], error
+                tokens.append(token)
+
+            elif self.current == '>':
+                token, error = self.make_greater_than()
+                if error: return [], error
+                tokens.append(token)
+
             else:
-                err = Error("IllegalCharacter", f"'{self.current}' is not valid", self.line, self.col)
+                err = Error("IllegalCharacter", f"'{self.current}' is not valid", self.index.line, self.index.col)
                 return [], err
+
         tokens.append(Token(TT_EOF))
         return tokens, None
+
+    def make_simple_token(self, type_):
+        pos_start = self.index.copy()
+        self.next()
+        return Token(type_, pos_start=pos_start, pos_end=self.index.copy())
 
     def make_number(self):
         num = ''
@@ -91,11 +105,77 @@ class Lexer:
 
         return Token(TT_FLOAT if has_dot else TT_INT, float(num) if has_dot else int(num))
 
-# Run functio
+    def make_identifiers(self):
+        id_str = ""
+        pos_start = self.index.copy()
+
+        while self.current is not None and self.current in LETTERS_DIGITS + '-':
+            id_str += self.current
+            self.next()
+        
+        if id_str.upper() in KEYWORDS:
+            token_type = TT_KEYWORD
+            id_str = id_str.upper()  
+        else:
+            token_type = TT_IDENTIFIER
+        
+        return Token(token_type, id_str, pos_start, self.index.copy())
+
+
+    def make_not_equals(self):
+        pos_start = self.index.copy()
+        self.next()
+
+        if self.current == '=':
+            self.next()
+            return Token(TT_NE, pos_start=pos_start, pos_end=self.index.copy()), None
+        else:
+            return None, Error("IllegalCharacter", "'=' expected after '!'", self.index.line, self.index.col)
+
+    def make_equals(self, type_):
+        pos_start = self.index.copy()
+        self.next()
+
+        if self.current == '=':
+            self.next()
+            return Token(TT_EE, pos_start=pos_start, pos_end=self.index.copy()), None
+        else:
+            return Token(type_, pos_start=pos_start, pos_end=self.index.copy()), None
+
+    def make_less_than(self):
+        pos_start = self.index.copy()
+        self.next()
+
+        if self.current == '=':
+            self.next()
+            return Token(TT_LTE, pos_start=pos_start, pos_end=self.index.copy()), None
+        else:
+            return Token(TT_LT, pos_start=pos_start, pos_end=self.index.copy()), None
+
+    def make_greater_than(self):
+        pos_start = self.index.copy()
+        self.next()
+
+        if self.current == '=':
+            self.next()
+            return Token(TT_GTE, pos_start=pos_start, pos_end=self.index.copy()), None
+        else:
+            return Token(TT_GT, pos_start=pos_start, pos_end=self.index.copy()), None
+
+# Run function
 def run(text):
     lexer = Lexer(text)
     tokens, error = lexer.make_tokens()
-
-
     return tokens, error
 
+def main():
+    text = "var a = 2 + 3 * (30 + 4)"
+    tokens, error = run(text)
+
+    if error:
+        print(error)
+    else:
+        print(tokens)
+
+if __name__ == "__main__":
+    main()
