@@ -1,5 +1,5 @@
 from .tokens import *
-from .errors import Error
+from .error import Error
 
 import string
 

@@ -1,4 +1,4 @@
-from src.lex import run
+from src.lex.lex import run
 from src.parser import Parser
 
 text = "var a = 2+3 * (30+4)"
