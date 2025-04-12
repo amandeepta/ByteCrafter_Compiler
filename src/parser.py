@@ -1,15 +1,4 @@
-#######################################
-# TOKEN TYPES
-#######################################
-TT_INT      = 'INT'
-TT_FLOAT    = 'FLOAT'
-TT_PLUS     = 'PLUS'
-TT_MINUS    = 'MINUS'
-TT_MUL      = 'MUL'
-TT_DIV      = 'DIV'
-TT_LPAREN   = 'LPAREN'
-TT_RPAREN   = 'RPAREN'
-TT_EOF      = 'EOF'
+from tokenTypes import *
 
 #######################################
 # NODE CLASSES
@@ -38,7 +27,7 @@ class UnaryOpNode:
     def __init__(self, op_tok, node):
         self.op_tok = op_tok
         self.node = node
-        self.pos_start = node.pos_start
+        self.pos_start = self.op_tok.pos_start
         self.pos_end = node.pos_end
     def __repr__(self):
         return f'({self.op_tok}{self.node})'

@@ -1,16 +1,6 @@
 DIGITS = '0123456789'
-
-# Token types
-TT_INT     = 'INT'
-TT_FLOAT   = 'FLOAT'
-TT_PLUS    = 'PLUS'
-TT_MINUS   = 'MINUS'
-TT_MUL     = 'MUL'
-TT_DIV     = 'DIV'
-TT_LPAREN  = 'LPAREN'
-TT_RPAREN  = 'RPAREN'
-TT_EOF     = 'EOF'
-
+from src.tokenTypes import *
+from src.error import *
 # Position class for tracking token positions
 class Position:
     def __init__(self, idx, line, col):
@@ -29,16 +19,6 @@ class Position:
     def copy(self):
         return Position(self.idx, self.line, self.col)
 
-# Error class
-class Error:
-    def __init__(self, name, message, line, column):
-        self.name = name
-        self.message = message
-        self.line = line
-        self.column = column
-
-    def __str__(self):
-        return f"{self.name}: {self.message} at line {self.line + 1}, column {self.column + 1}"
 
 # Token class
 class Token:

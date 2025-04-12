@@ -3,7 +3,7 @@ from src.parser import Parser
 
 from src.interpreter import Interpreter
 
-text = "2+3 * (30+4)"
+text = "4"
 tokens, error = run(text)
 
 if error:
@@ -15,4 +15,5 @@ else:
     print(ast)
     interpreter = Interpreter()
     result = interpreter.visit(ast.node)
-    print(result)
+    print(result.value)
+    print(result.error)
