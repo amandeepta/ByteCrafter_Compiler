@@ -1,4 +1,4 @@
-from src.position import Position
+from src.Utils.position import Position
 
 # Token types
 TT_INT = 'INT'

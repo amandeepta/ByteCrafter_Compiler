@@ -1,5 +1,5 @@
-from .tokens import *
-from .errors import *
+from src.Utils.tokens import *
+from src.Utils.error import *
 
 #######################################
 # NODE CLASSES
@@ -85,6 +85,9 @@ class Parser:
         self.tok_idx = -1
         self.current_tok = None
         self.advance()
+
+    def __repr__(self):
+        return f'Parser: {self.tokens}'
 
     def advance(self):
         self.tok_idx += 1

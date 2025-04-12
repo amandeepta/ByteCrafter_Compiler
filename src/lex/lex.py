@@ -1,5 +1,6 @@
-from .tokens import *
-from .error import Error
+from src.Utils.tokens import *
+from src.Utils.error import *
+from src.Utils.position import *
 
 import string
 
@@ -12,15 +13,15 @@ LETTERS_DIGITS = LETTERS + DIGITS
 class Lexer:
     def __init__(self, text):
         self.text = text
-        self.index = Position(-1, 0, 1)
+        self.pos = Position(-1, 0, 1)
         self.current = None
         self.next()
 
     def next(self):
-        self.index.advance(self.current)
+        self.pos.advance(self.current)
 
-        if self.index.idx < len(self.text):
-            self.current = self.text[self.index.idx]
+        if self.pos.idx < len(self.text):
+            self.current = self.text[self.pos.idx]
         else:
             self.current = None
 
@@ -78,16 +79,16 @@ class Lexer:
                 tokens.append(token)
 
             else:
-                err = Error("IllegalCharacter", f"'{self.current}' is not valid", self.index.line, self.index.col)
+                err = Error("IllegalCharacter", f"'{self.current}' is not valid", self.pos.line, self.pos.col)
                 return [], err
 
         tokens.append(Token(TT_EOF))
         return tokens, None
 
     def make_simple_token(self, type_):
-        pos_start = self.index.copy()
+        pos_start = self.pos.copy()
         self.next()
-        return Token(type_, pos_start=pos_start, pos_end=self.index.copy())
+        return Token(type_, pos_start=pos_start, pos_end=self.pos.copy())
 
     def make_number(self):
         num_str = ''
@@ -108,7 +109,7 @@ class Lexer:
 
     def make_identifiers(self):
         id_str = ""
-        pos_start = self.index.copy()
+        pos_start = self.pos.copy()
 
         while self.current is not None and self.current in LETTERS_DIGITS + '-':
             id_str += self.current
@@ -120,48 +121,48 @@ class Lexer:
         else:
             token_type = TT_IDENTIFIER
         
-        return Token(token_type, id_str, pos_start, self.index.copy())
+        return Token(token_type, id_str, pos_start, self.pos.copy())
 
 
     def make_not_equals(self):
-        pos_start = self.index.copy()
+        pos_start = self.pos.copy()
         self.next()
 
         if self.current == '=':
             self.next()
-            return Token(TT_NE, pos_start=pos_start, pos_end=self.index.copy()), None
+            return Token(TT_NE, pos_start=pos_start, pos_end=self.pos.copy()), None
         else:
-            return None, Error("IllegalCharacter", "'=' expected after '!'", self.index.line, self.index.col)
+            return None, Error("IllegalCharacter", "'=' expected after '!'", self.pos.line, self.pos.col)
 
     def make_equals(self, type_):
-        pos_start = self.index.copy()
+        pos_start = self.pos.copy()
         self.next()
 
         if self.current == '=':
             self.next()
-            return Token(TT_EE, pos_start=pos_start, pos_end=self.index.copy()), None
+            return Token(TT_EE, pos_start=pos_start, pos_end=self.pos.copy()), None
         else:
-            return Token(type_, pos_start=pos_start, pos_end=self.index.copy()), None
+            return Token(type_, pos_start=pos_start, pos_end=self.pos.copy()), None
 
     def make_less_than(self):
-        pos_start = self.index.copy()
+        pos_start = self.pos.copy()
         self.next()
 
         if self.current == '=':
             self.next()
-            return Token(TT_LTE, pos_start=pos_start, pos_end=self.index.copy()), None
+            return Token(TT_LTE, pos_start=pos_start, pos_end=self.pos.copy()), None
         else:
-            return Token(TT_LT, pos_start=pos_start, pos_end=self.index.copy()), None
+            return Token(TT_LT, pos_start=pos_start, pos_end=self.pos.copy()), None
 
     def make_greater_than(self):
-        pos_start = self.index.copy()
+        pos_start = self.pos.copy()
         self.next()
 
         if self.current == '=':
             self.next()
-            return Token(TT_GTE, pos_start=pos_start, pos_end=self.index.copy()), None
+            return Token(TT_GTE, pos_start=pos_start, pos_end=self.pos.copy()), None
         else:
-            return Token(TT_GT, pos_start=pos_start, pos_end=self.index.copy()), None
+            return Token(TT_GT, pos_start=pos_start, pos_end=self.pos.copy()), None
 
 # Run function
 def run(text):

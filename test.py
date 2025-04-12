@@ -1,5 +1,6 @@
 from src.lex.lex import run
-from src.parser import Parser
+from src.Parser.parser import Parser
+from src.Interpreter.interpreter import Interpreter
 
 text = "var a = 2+3 * (30+4)"
 tokens, error = run(text)

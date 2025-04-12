@@ -1,33 +1,14 @@
-#######################################
-# TOKEN TYPES
-#######################################
-TT_INT      = 'INT'
-TT_FLOAT    = 'FLOAT'
-TT_PLUS     = 'PLUS'
-TT_MINUS    = 'MINUS'
-TT_MUL      = 'MUL'
-TT_DIV      = 'DIV'
-TT_LPAREN   = 'LPAREN'
-TT_RPAREN   = 'RPAREN'
-TT_EOF      = 'EOF'
-
-
-#######################################
-# Runtime Error Class
-#######################################
-class RTError(Exception):
-    def __init__(self, pos_start, pos_end, details):
-        self.pos_start = pos_start
-        self.pos_end = pos_end
-        self.details = details
-
-    def __str__(self):
-        return f'Runtime Error: {self.details}'
+from src.Utils.tokens import *
+from src.Utils.error import *
 
 
 #######################################
 # Number Class
+
 #######################################
+'''
+ bhai is number class ko bhi utils m shift krna??
+'''
 class Number:
     def __init__(self, value):
         self.value = value
@@ -63,6 +44,9 @@ class Number:
 #######################################
 # RTResult Class
 #######################################
+'''
+aur yeh bhi???
+'''
 class RTResult:
     def __init__(self):
         self.value = None
