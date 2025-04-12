@@ -14,8 +14,6 @@ class Lexer:
         self.text = text
         self.index = Position(-1, 0, 1)
         self.current = None
-        self.line = 0
-        self.col = -1
         self.next()
 
     def next(self):
@@ -92,18 +90,21 @@ class Lexer:
         return Token(type_, pos_start=pos_start, pos_end=self.index.copy())
 
     def make_number(self):
-        num = ''
+        num_str = ''
         has_dot = False
+        pos_start = self.pos.copy()
 
         while self.current is not None and (self.current in DIGITS or self.current == '.'):
             if self.current == '.':
                 if has_dot:
                     break
                 has_dot = True
-            num += self.current
+            num_str += self.current
             self.next()
 
-        return Token(TT_FLOAT if has_dot else TT_INT, float(num) if has_dot else int(num))
+        value = float(num_str) if has_dot else int(num_str)
+        tok_type = TT_FLOAT if has_dot else TT_INT
+        return Token(tok_type, value, pos_start, self.pos.copy())
 
     def make_identifiers(self):
         id_str = ""

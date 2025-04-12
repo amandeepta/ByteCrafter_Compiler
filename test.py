@@ -11,3 +11,7 @@ else:
     parser = Parser(tokens)
     ast = parser.parse()
     print(ast)
+    interpreter = Interpreter()
+    result = interpreter.visit(ast.node)
+    print(result.value)
+    print(result.error)
